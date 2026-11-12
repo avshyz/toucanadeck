@@ -84,12 +84,12 @@ export function TerrainCard({ terrain, index, dir }: { terrain: Terrain; index: 
   return (
     <motion.div
       className="card terrain-card"
+      style={{ gridColumn: index + 1, transformStyle: 'preserve-3d' }}
       custom={dir}
       variants={variants}
       initial="enter"
       animate="center"
       exit="exit"
-      style={{ transformStyle: 'preserve-3d' }}
     >
       <TerrainFace terrain={terrain} />
       <CardBack />

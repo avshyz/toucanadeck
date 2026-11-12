@@ -106,10 +106,15 @@ function Splash({
   const [rounds, setRounds] = useState<Rounds>((saved?.decks.length as Rounds) ?? 2)
   const canContinue = !!saved && saved.step < totalTurns(saved)
   const [setupOpen, setSetupOpen] = useState(!canContinue)
-  const pulse = {
-    animate: { boxShadow: ['0 0 0 0 rgba(255,196,61,.6)', '0 0 0 18px rgba(255,196,61,0)'] },
-    transition: { boxShadow: { repeat: Infinity, duration: 1.6 } },
-  }
+  // Pulsing ring: animates only transform/opacity so it stays on the GPU.
+  const ring = (
+    <motion.span
+      className="pulse-ring"
+      aria-hidden
+      animate={{ scale: [1, 1.25], opacity: [0.6, 0] }}
+      transition={{ repeat: Infinity, duration: 1.6, ease: 'easeOut' }}
+    />
+  )
 
   return (
     <motion.main
@@ -169,7 +174,8 @@ function Splash({
                   { value: 3 as Rounds, text: '3', sub: 'rounds' },
                 ]}
               />
-              <motion.button className="start-btn" whileTap={{ scale: 0.94 }} {...pulse} onClick={() => onStart(mode, rounds)}>
+              <motion.button className="start-btn" whileTap={{ scale: 0.94 }} onClick={() => onStart(mode, rounds)}>
+                {ring}
                 Start
               </motion.button>
               {canContinue && (
@@ -180,7 +186,8 @@ function Splash({
             </motion.div>
           ) : (
             <motion.div key="continue" className="splash-controls" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <motion.button className="start-btn continue-btn" whileTap={{ scale: 0.94 }} {...pulse} onClick={onContinue}>
+              <motion.button className="start-btn continue-btn" whileTap={{ scale: 0.94 }} onClick={onContinue}>
+                {ring}
                 Continue
                 <span className="resume-info">
                   Round {turnInfo(saved!.step).round + 1}/{saved!.decks.length} · Turn {turnInfo(saved!.step).turn + 1}
@@ -281,7 +288,13 @@ function Table({
       <section className="play-area">
 
         <div className="terrain-row">
-          <AnimatePresence custom={dir} initial={true} mode="popLayout">
+          {!over && (
+            <>
+              <div className="card-shadow" style={{ gridColumn: 1 }} />
+              <div className="card-shadow" style={{ gridColumn: 2 }} />
+            </>
+          )}
+          <AnimatePresence custom={dir} initial={true}>
             {cards?.map((t, i) => <TerrainCard key={`${game.step}-${i}`} terrain={t} index={i} dir={dir} />)}
           </AnimatePresence>
           <AnimatePresence>

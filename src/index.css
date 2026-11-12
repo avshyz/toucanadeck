@@ -17,6 +17,11 @@
   box-sizing: border-box;
 }
 
+html {
+  /* solid colour so Safari's bars / overscroll areas match instead of white */
+  background-color: #0a2a20;
+}
+
 html,
 body,
 #root {
@@ -27,7 +32,8 @@ body,
 }
 
 body {
-  background: radial-gradient(120% 80% at 50% 20%, var(--jungle-1), var(--jungle-2));
+  background-color: #0a2a20;
+  background-image: radial-gradient(120% 80% at 50% 20%, var(--jungle-1), var(--jungle-2));
   user-select: none;
 }
 
@@ -64,7 +70,6 @@ main {
   -webkit-backface-visibility: hidden;
   overflow: hidden;
   box-shadow:
-    0 10px 24px rgba(0, 0, 0, 0.35),
     inset 0 0 0 2px rgba(255, 255, 255, 0.25);
 }
 
@@ -297,8 +302,11 @@ main {
 }
 
 .terrain-row {
-  display: flex;
-  gap: 4vw;
+  /* two fixed slots; entering and leaving cards share a slot (no layout work) */
+  display: grid;
+  grid-template-columns: var(--card-w) var(--card-w);
+  grid-template-rows: var(--card-h);
+  column-gap: 4vw;
   justify-content: center;
   align-items: center;
   perspective: 1200px;
@@ -573,3 +581,43 @@ main {
   gap: 2px;
 }
 
+
+.terrain-card {
+  grid-row: 1;
+  will-change: transform, opacity;
+}
+
+/* Static shadow under each card slot: painted once, never re-rasterised during flips */
+.card-shadow {
+  grid-row: 1;
+  align-self: end;
+  height: 18%;
+  margin: 0 8%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.45), transparent);
+  transform: translateY(40%);
+}
+
+.bonus-card .face {
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+.start-btn {
+  position: relative;
+}
+
+.pulse-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 3px solid var(--gold);
+  pointer-events: none;
+}
+
+.terrain-row .game-over {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  justify-self: center;
+}
