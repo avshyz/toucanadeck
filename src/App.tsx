@@ -67,6 +67,9 @@ export default function App() {
 
 /* ---------------- Splash ---------------- */
 
+/** Pause before the splash animation starts (seconds). */
+const SPLASH_DELAY = 0.5
+
 function Segmented<T extends string | number>({
   label,
   value,
@@ -122,7 +125,7 @@ function Splash({
             className="card splash-card"
             initial={{ y: 300, rotate: 0, opacity: 0 }}
             animate={{ y: 0, rotate: r, x: r * 2.5, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 90, damping: 14, delay: 0.15 + i * 0.1 }}
+            transition={{ type: 'spring', stiffness: 90, damping: 14, delay: SPLASH_DELAY + 0.15 + i * 0.1 }}
           >
             <CardBack standalone />
           </motion.div>
@@ -133,7 +136,7 @@ function Splash({
         className="title"
         initial={{ y: 40, opacity: 0, scale: 0.8 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 120, damping: 12, delay: 0.6 }}
+        transition={{ type: 'spring', stiffness: 120, damping: 12, delay: SPLASH_DELAY + 0.6 }}
       >
         Toucana
       </motion.h1>
@@ -142,7 +145,7 @@ function Splash({
         className="splash-controls"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.9 }}
+        transition={{ delay: SPLASH_DELAY + 0.9 }}
       >
         <AnimatePresence mode="wait" initial={false}>
           {setupOpen ? (
