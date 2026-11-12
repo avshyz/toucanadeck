@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { Check, Mountain, Sparkles, Sun, Trees, Waves } from 'lucide-react'
 import { SIGHT_ICON, SIGHT_NAME } from './SightIcons'
+import { TerrainArt } from './TerrainArt'
 import { useEffect, useState, type ComponentType } from 'react'
 import { bonusStack, RED_BONUS, type Letter, type PlayerMode, type Terrain } from './game'
 
@@ -23,15 +24,9 @@ export function CardBack({ small, standalone }: { small?: boolean; standalone?: 
 }
 
 function TerrainFace({ terrain }: { terrain: Terrain }) {
-  const { name, Icon } = TERRAIN[terrain]
   return (
-    <div className={`face front terrain-${terrain}`}>
-      <span className="corner tl">{name}</span>
-      <div className="terrain-icon">
-        <Icon size={72} strokeWidth={1.6} />
-      </div>
-      <span className="terrain-name">{name}</span>
-      <span className="corner br">{name}</span>
+    <div className="face front terrain-face">
+      <TerrainArt terrain={terrain} name={TERRAIN[terrain].name} />
     </div>
   )
 }
@@ -178,7 +173,6 @@ export function SetupCard({ letters }: { letters: Letter[] }) {
               style={{ left: `${50 + 38 * Math.sin(a)}%`, top: `${50 - 38 * Math.cos(a)}%` }}
             >
               {l}
-              <small>{i + 1}</small>
             </span>
           )
         })}

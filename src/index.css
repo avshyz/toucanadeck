@@ -653,3 +653,18 @@ main {
   background: linear-gradient(180deg, var(--gold), var(--orange));
   color: #3a1a00;
 }
+
+/* Illustrated terrain cards */
+.terrain-face {
+  background: #efe4cc;
+  padding: 0;
+  box-shadow: inset 0 0 0 2px #f8f3ea;
+}
+.terrain-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}

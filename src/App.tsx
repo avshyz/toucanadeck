@@ -18,8 +18,10 @@ import {
   type Letter,
   type PlayerMode,
   type Rounds,
+  type Terrain,
 } from './game'
 import { playDraw, playFlip, playGameEnd, playRoundEnd, playUndo } from './sound'
+import { TerrainArt } from './TerrainArt'
 import { useWakeLock } from './useWakeLock'
 
 export default function App() {
@@ -69,6 +71,14 @@ export default function App() {
 
 /** Pause before the splash animation starts (seconds). */
 const SPLASH_DELAY = 0.5
+
+/** Terrain cards fanned out on the splash screen, with their tilt in degrees. */
+const SPLASH_FAN: [Terrain, number][] = [
+  ['desert', -24],
+  ['forest', -8],
+  ['mountain', 8],
+  ['water', 24],
+]
 
 function Segmented<T extends string | number>({
   label,
@@ -124,15 +134,17 @@ function Splash({
       exit={{ opacity: 0, scale: 1.08, transition: { duration: 0.35 } }}
     >
       <div className="splash-cards" aria-hidden>
-        {[-24, -8, 8, 24].map((r, i) => (
+        {SPLASH_FAN.map(([t, r], i) => (
           <motion.div
-            key={r}
+            key={t}
             className="card splash-card"
             initial={{ y: 300, rotate: 0, opacity: 0 }}
-            animate={{ y: 0, rotate: r, x: r * 2.5, opacity: 1 }}
+            animate={{ y: 0, rotate: r, x: r * 1.6, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 90, damping: 14, delay: SPLASH_DELAY + 0.15 + i * 0.1 }}
           >
-            <CardBack standalone />
+            <div className="face front terrain-face">
+              <TerrainArt terrain={t} name="" />
+            </div>
           </motion.div>
         ))}
       </div>
