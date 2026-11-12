@@ -56,43 +56,55 @@ function useReplayed(value: number, order: number) {
 }
 
 /** A terrain card that flies in from the deck (next) or back from the discard (undo), flipping face-up. */
-const DECK_POS = { x: 170, y: -260, rotateY: 180, rotateZ: 14, opacity: 0, scale: 0.8 }
-const DISCARD_POS = { x: -190, y: 200, rotateY: 0, rotateZ: -16, opacity: 0, scale: 0.8 }
+const DECK_POS = { x: 170, y: -260, rotateZ: 14, opacity: 0, scale: 0.8 }
+const DISCARD_POS = { x: -190, y: 200, rotateZ: -16, opacity: 0, scale: 0.8 }
+
+/**
+ * Soft card shadow as a pre-blurred image: it moves and tilts with the card but is
+ * rasterised once, so animating it costs nothing extra.
+ */
+const SHADOW_URL = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 185" width="280" height="370">
+    <filter id="b" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7"/></filter>
+    <rect x="20" y="26" width="100" height="145" rx="10" fill="#000" opacity="0.55" filter="url(#b)"/>
+  </svg>`,
+)}`
 
 export function TerrainCard({ terrain, index, dir }: { terrain: Terrain; index: number; dir: Dir }) {
   // `custom` (dir, or 0 on game over) is supplied by AnimatePresence so exiting cards use the latest value.
-  const variants = {
+  const spring = { type: 'spring' as const, stiffness: 160, damping: 19, delay: 0.12 + index * 0.16 }
+  const leave = { duration: 0.32, ease: 'easeIn' as const, delay: index * 0.05 }
+  const fade = { duration: 0.45, ease: 'easeInOut' as const }
+
+  // Outer layer: position / tilt / fade (2D only) — carries the shadow.
+  const move = {
     enter: (d: Dir) => (d === 1 ? DECK_POS : DISCARD_POS),
-    center: {
-      x: 0,
-      y: 0,
-      rotateY: 0,
-      rotateZ: index === 0 ? -3 : 3,
-      opacity: 1,
-      scale: 1,
-      transition: { type: 'spring' as const, stiffness: 160, damping: 19, delay: 0.12 + index * 0.16 },
-    },
+    center: { x: 0, y: 0, rotateZ: index === 0 ? -3 : 3, opacity: 1, scale: 1, transition: spring },
     // 0 = game over: fade and shrink in place, matching the HUD
     exit: (d: Dir | 0) =>
-      d === 0
-        ? { opacity: 0, scale: 0.9, transition: { duration: 0.45, ease: 'easeInOut' as const } }
-        : {
-            ...(d === 1 ? DISCARD_POS : DECK_POS),
-            transition: { duration: 0.32, ease: 'easeIn' as const, delay: index * 0.05 },
-          },
+      d === 0 ? { opacity: 0, scale: 0.9, transition: fade } : { ...(d === 1 ? DISCARD_POS : DECK_POS), transition: leave },
+  }
+  // Inner layer: the 3D flip only — the shadow is not part of it.
+  const flip = {
+    enter: (d: Dir) => ({ rotateY: d === 1 ? 180 : 0 }),
+    center: { rotateY: 0, transition: spring },
+    exit: (d: Dir | 0) => (d === 0 ? { rotateY: 0, transition: fade } : { rotateY: d === 1 ? 0 : 180, transition: leave }),
   }
   return (
     <motion.div
-      className="card terrain-card"
-      style={{ gridColumn: index + 1, transformStyle: 'preserve-3d' }}
+      className="terrain-card"
+      style={{ gridColumn: index + 1 }}
       custom={dir}
-      variants={variants}
+      variants={move}
       initial="enter"
       animate="center"
       exit="exit"
     >
-      <TerrainFace terrain={terrain} />
-      <CardBack />
+      <img className="card-shadow-img" src={SHADOW_URL} alt="" aria-hidden draggable={false} />
+      <motion.div className="card terrain-flip" custom={dir} variants={flip} style={{ transformStyle: 'preserve-3d' }}>
+        <TerrainFace terrain={terrain} />
+        <CardBack />
+      </motion.div>
     </motion.div>
   )
 }

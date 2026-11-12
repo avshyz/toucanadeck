@@ -262,7 +262,6 @@ function Table({
     }
     setRoundEnd(false)
     setDir(d)
-    navigator.vibrate?.(12)
     if (d === -1) playUndo()
     else if (step < total) playDraw()
     setGame({ ...game, step })
@@ -319,12 +318,6 @@ function Table({
       <section className="play-area">
 
         <div className="terrain-row">
-          {!over && (
-            <>
-              <div className="card-shadow" style={{ gridColumn: 1 }} />
-              <div className="card-shadow" style={{ gridColumn: 2 }} />
-            </>
-          )}
           <AnimatePresence custom={over ? 0 : dir} initial={true}>
             {cards?.map((t, i) => <TerrainCard key={`${game.step}-${i}`} terrain={t} index={i} dir={dir} />)}
           </AnimatePresence>
