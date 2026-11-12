@@ -390,6 +390,10 @@ main {
   gap: 2px;
 }
 
+.bonus-face.second {
+  background: linear-gradient(170deg, #2ba3c2, #156a86);
+}
+
 .bonus-face.claimed {
   background: linear-gradient(170deg, #4a5a55, #2c3a35);
   color: var(--muted);
@@ -510,6 +514,15 @@ main {
   aspect-ratio: 1;
   margin: 0 auto 18px;
   border-radius: 50%;
+}
+
+.setup-card .face,
+.setup-card .back-inner {
+  border-radius: 50%;
+}
+
+.setup-card .back-inner span {
+  transform: none;
 }
 
 .setup-face {
@@ -682,3 +695,25 @@ main {
   object-fit: cover;
   pointer-events: none;
 }
+
+.splash-swap {
+  width: 100%;
+}
+
+/* Full-screen village set-up card (shown before play, HUD hidden) */
+.setup-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: calc(env(safe-area-inset-top) + 16px) 24px calc(env(safe-area-inset-bottom) + 16px);
+  text-align: center;
+}
+.setup-screen h2 { margin: 0 0 6px; font-size: 1.9rem; }
+.setup-screen .modal-actions { flex-direction: column-reverse; align-items: center; gap: 14px; }
+.setup-screen p { margin: 0 0 22px; color: var(--muted); max-width: 340px; }
+.setup-screen .setup-card { width: min(82vw, 52dvh, 360px); margin-bottom: 28px; }

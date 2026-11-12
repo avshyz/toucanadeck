@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, Flag, Hourglass, MapPin, RotateCcw, Undo2, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { BonusCard, CardBack, RedBonusCard, SetupCard, TerrainCard, type Dir } from './Cards'
 import {
   cardsAt,
@@ -103,6 +103,13 @@ function Segmented<T extends string | number>({
   )
 }
 
+const SPLASH_SWAP = { type: 'spring' as const, stiffness: 220, damping: 30 }
+const SWAP = {
+  initial: { opacity: 0, y: 10, scale: 0.97 },
+  animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.28, delay: 0.08, ease: 'easeOut' as const } },
+  exit: { opacity: 0, scale: 0.97, transition: { duration: 0.15, ease: 'easeIn' as const } },
+}
+
 function Splash({
   saved,
   onStart,
@@ -116,6 +123,17 @@ function Splash({
   const [rounds, setRounds] = useState<Rounds>((saved?.decks.length as Rounds) ?? 2)
   const canContinue = !!saved && saved.step < totalTurns(saved)
   const [setupOpen, setSetupOpen] = useState(!canContinue)
+  // The controls box animates its height to the swapped-in content, so the
+  // centred title and cards above glide instead of jumping.
+  const controlsRef = useRef<HTMLDivElement>(null)
+  const [controlsH, setControlsH] = useState<number>()
+  useLayoutEffect(() => {
+    const el = controlsRef.current
+    if (!el) return
+    const ro = new ResizeObserver(() => setControlsH(el.offsetHeight))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
   // Pulsing ring: animates only transform/opacity so it stays on the GPU.
   const ring = (
     <motion.span
@@ -159,58 +177,60 @@ function Splash({
       </motion.h1>
 
       <motion.div
-        className="splash-controls"
+        className="splash-swap"
         initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: SPLASH_DELAY + 0.9 }}
+        animate={{ opacity: 1, y: 0, height: controlsH ?? 'auto' }}
+        transition={{ delay: SPLASH_DELAY + 0.9, height: SPLASH_SWAP }}
       >
-        <AnimatePresence mode="wait" initial={false}>
-          {setupOpen ? (
-            <motion.div key="setup" className="splash-controls" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <Segmented
-                label="Players"
-                value={mode}
-                onChange={setMode}
-                options={(['solo', 'small', 'large'] as PlayerMode[]).map((m) => ({
-                  value: m,
-                  text: MODE_LABEL[m],
-                  sub: m === 'solo' ? undefined : 'players',
-                }))}
-              />
-              <Segmented
-                label="Rounds"
-                value={rounds}
-                onChange={setRounds}
-                options={[
-                  { value: 2 as Rounds, text: '2', sub: 'rounds' },
-                  { value: 3 as Rounds, text: '3', sub: 'rounds' },
-                ]}
-              />
-              <motion.button className="start-btn" whileTap={{ scale: 0.94 }} onClick={() => onStart(mode, rounds)}>
-                {ring}
-                Start
-              </motion.button>
-              {canContinue && (
-                <button className="link-btn" onClick={() => setSetupOpen(false)}>
-                  Back
+        <div ref={controlsRef}>
+          <AnimatePresence mode="wait" initial={false}>
+            {setupOpen ? (
+              <motion.div key="setup" className="splash-controls" {...SWAP}>
+                <Segmented
+                  label="Players"
+                  value={mode}
+                  onChange={setMode}
+                  options={(['solo', 'small', 'large'] as PlayerMode[]).map((m) => ({
+                    value: m,
+                    text: MODE_LABEL[m],
+                    sub: m === 'solo' ? undefined : 'players',
+                  }))}
+                />
+                <Segmented
+                  label="Rounds"
+                  value={rounds}
+                  onChange={setRounds}
+                  options={[
+                    { value: 2 as Rounds, text: '2', sub: 'rounds' },
+                    { value: 3 as Rounds, text: '3', sub: 'rounds' },
+                  ]}
+                />
+                <motion.button className="start-btn" whileTap={{ scale: 0.94 }} onClick={() => onStart(mode, rounds)}>
+                  {ring}
+                  Start
+                </motion.button>
+                {canContinue && (
+                  <button className="link-btn" onClick={() => setSetupOpen(false)}>
+                    Back
+                  </button>
+                )}
+              </motion.div>
+            ) : (
+              <motion.div key="continue" className="splash-controls" {...SWAP}>
+                <motion.button className="start-btn continue-btn" whileTap={{ scale: 0.94 }} onClick={onContinue}>
+                  {ring}
+                  Continue
+                  <span className="resume-info">
+                    Round {turnInfo(saved!.step).round + 1}/{saved!.decks.length} · Turn {turnInfo(saved!.step).turn + 1}
+                  </span>
+                </motion.button>
+                <button className="link-btn" onClick={() => setSetupOpen(true)}>
+                  New game
                 </button>
-              )}
-            </motion.div>
-          ) : (
-            <motion.div key="continue" className="splash-controls" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <motion.button className="start-btn continue-btn" whileTap={{ scale: 0.94 }} onClick={onContinue}>
-                {ring}
-                Continue
-                <span className="resume-info">
-                  Round {turnInfo(saved!.step).round + 1}/{saved!.decks.length} · Turn {turnInfo(saved!.step).turn + 1}
-                </span>
-              </motion.button>
-              <button className="link-btn" onClick={() => setSetupOpen(true)}>
-                New game
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </motion.div>
     </motion.main>
   )
@@ -239,12 +259,15 @@ function Table({
   const cards = over ? null : cardsAt(game, game.step)
   const leftInDeck = over ? 0 : DECK_SIZE - (turn + 1) * 2
 
-  // On game over the HUD fades and shrinks away, leaving the game-over panel (and undo).
-  const hud = {
-    animate: over ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 },
+  // The HUD fades and shrinks away on game over (leaving the game-over panel and undo)
+  // and while the full-screen set-up card is up; it fades back in once that's accepted.
+  const veil = (hidden: boolean) => ({
+    initial: { opacity: 0, scale: 0.9 },
+    animate: hidden ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 },
     transition: { duration: 0.45, ease: 'easeInOut' as const },
-    style: { pointerEvents: over ? ('none' as const) : undefined },
-  }
+    style: { pointerEvents: hidden ? ('none' as const) : undefined },
+  })
+  const hud = veil(over || showVillages)
   const lastTurnOfRound = !over && turn === TURNS_PER_ROUND - 1
   const finalRound = round === game.decks.length - 1
   const [roundEnd, setRoundEnd] = useState(false)
@@ -305,7 +328,10 @@ function Table({
         <motion.button
           className="card mini setup-mini"
           whileTap={{ scale: 0.9 }}
-          onClick={() => setShowVillages(true)}
+          onClick={() => {
+            setDir(1)
+            setShowVillages(true)
+          }}
           aria-label="Village set-up card"
         >
           <MapPin size={18} />
@@ -318,8 +344,8 @@ function Table({
       <section className="play-area">
 
         <div className="terrain-row">
-          <AnimatePresence custom={over ? 0 : dir} initial={true}>
-            {cards?.map((t, i) => <TerrainCard key={`${game.step}-${i}`} terrain={t} index={i} dir={dir} />)}
+          <AnimatePresence custom={over || showVillages ? 0 : dir} initial={true}>
+            {!showVillages && cards?.map((t, i) => <TerrainCard key={`${game.step}-${i}`} terrain={t} index={i} dir={dir} />)}
           </AnimatePresence>
           <AnimatePresence>
             {over && (
@@ -363,14 +389,14 @@ function Table({
         </div>
       </motion.section>
 
-      <div className="fabs">
+      <motion.div className="fabs" {...veil(showVillages)}>
         <motion.button className="fab undo" whileTap={{ scale: 0.88 }} onClick={() => go(-1)} disabled={game.step === 0} aria-label="Undo">
           <Undo2 size={24} />
         </motion.button>
         <motion.button className="fab next" whileTap={{ scale: 0.9 }} onClick={() => go(1)} disabled={over} aria-label="Next" {...hud}>
           <ArrowRight size={30} strokeWidth={2.5} />
         </motion.button>
-      </div>
+      </motion.div>
 
       <AnimatePresence>
         {roundEnd && (
@@ -409,21 +435,29 @@ function Table({
           </Modal>
         )}
         {showVillages && (
-          <Modal key="villages" onClose={() => setShowVillages(false)}>
+          <motion.div
+            key="villages"
+            className="setup-screen"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 0.94, transition: { duration: 0.3, ease: 'easeIn' } }}
+          >
             <h2>Set-up card</h2>
             <p>Read clockwise from the top. Mayor starts at village 1, the next player at village 2…</p>
-            <SetupCard key={game.villages.join('')} letters={game.villages} />
+            <AnimatePresence mode="wait">
+              <SetupCard key={game.villages.join('')} letters={game.villages} />
+            </AnimatePresence>
             <div className="modal-actions">
               {game.step === 0 && (
                 <button className="link-btn" onClick={() => setGame({ ...game, villages: setupCard(game.villages) })}>
                   Draw another
                 </button>
               )}
-              <button className="start-btn small" onClick={() => setShowVillages(false)}>
-                Done
-              </button>
+              <motion.button className="start-btn" whileTap={{ scale: 0.94 }} onClick={() => setShowVillages(false)}>
+                {game.step === 0 ? "Let's play" : 'Back to game'}
+              </motion.button>
             </div>
-          </Modal>
+          </motion.div>
         )}
       </AnimatePresence>
     </motion.main>

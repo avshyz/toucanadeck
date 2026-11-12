@@ -148,6 +148,8 @@ export function BonusCard({
   const even = claimed % 2 === 0 ? claimed : claimed - 1
   const odd = claimed % 2 === 1 ? claimed : claimed - 1
   const done = claimed >= stack.length
+  // #2 cards (second to connect) use a paler blue
+  const tone = (i: number) => (i >= stack.length ? 'claimed' : i === 1 ? 'second' : '')
 
   return (
     <button className="bonus-slot" onClick={onTap} aria-label={`Bonus ${letter}-${letter}`}>
@@ -159,8 +161,8 @@ export function BonusCard({
         transition={BONUS_SPRING}
         style={{ transformStyle: 'preserve-3d' }}
       >
-        <div className={`face front bonus-face ${even >= stack.length ? 'claimed' : ''}`}>{content(even)}</div>
-        <div className={`face front flipped bonus-face ${odd >= stack.length ? 'claimed' : ''}`}>{content(odd)}</div>
+        <div className={`face front bonus-face ${tone(even)}`}>{content(even)}</div>
+        <div className={`face front flipped bonus-face ${tone(odd)}`}>{content(odd)}</div>
       </motion.div>
     </button>
   )
@@ -171,8 +173,9 @@ export function SetupCard({ letters }: { letters: Letter[] }) {
   return (
     <motion.div
       className="card setup-card"
-      initial={{ rotateY: 180, scale: 0.7, y: 30 }}
-      animate={{ rotateY: 0, scale: 1, y: 0 }}
+      initial={{ rotateY: 180 }}
+      animate={{ rotateY: 0 }}
+      exit={{ rotateY: -180, transition: { duration: 0.3, ease: 'easeIn' } }}
       transition={{ type: 'spring', stiffness: 140, damping: 16, delay: 0.15 }}
       style={{ transformStyle: 'preserve-3d' }}
     >
