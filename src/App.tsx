@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, MapPin, RotateCcw, Undo2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { BonusCard, CardBack, SetupCard, TerrainCard, type Dir } from './Cards'
+import { BonusCard, CardBack, RedBonusCard, SetupCard, TerrainCard, type Dir } from './Cards'
 import {
   cardsAt,
   DECK_SIZE,
@@ -19,6 +19,7 @@ import {
   type PlayerMode,
   type Rounds,
 } from './game'
+import { playDraw, playFlip, playUndo } from './sound'
 import { useWakeLock } from './useWakeLock'
 
 export default function App() {
@@ -30,6 +31,7 @@ export default function App() {
   useEffect(() => save(game), [game])
 
   const start = (mode: PlayerMode, rounds: Rounds) => {
+    playDraw()
     setGame(newGame(mode, rounds))
     setFresh(true)
     setPlaying(true)
@@ -220,13 +222,23 @@ function Table({
     if (step < 0 || step > total) return
     setDir(d)
     navigator.vibrate?.(12)
+    if (d === -1) playUndo()
+    else if (step < total) playDraw()
     setGame({ ...game, step })
   }
 
   const tapBonus = (l: Letter) => {
     const max = game.mode === 'large' ? 2 : 1
     const next = game.claimed[l] >= max ? 0 : game.claimed[l] + 1
+    playFlip()
     setGame({ ...game, claimed: { ...game.claimed, [l]: next } })
+  }
+
+  const tapRed = (i: number) => {
+    const redClaimed = [...(game.redClaimed ?? [false, false])]
+    redClaimed[i] = !redClaimed[i]
+    playFlip()
+    setGame({ ...game, redClaimed })
   }
 
   return (
@@ -240,23 +252,26 @@ function Table({
             Turn {over ? TURNS_PER_ROUND : turn + 1}/{TURNS_PER_ROUND}
           </span>
         </div>
-        <div className="top-actions">
-          <button className="icon-btn" onClick={() => setShowVillages(true)} aria-label="Village set-up card">
-            <MapPin size={20} />
-          </button>
-          <button className="icon-btn" onClick={() => setConfirmNew(true)} aria-label="New game">
-            <RotateCcw size={20} />
-          </button>
-        </div>
-      </header>
-
-      <section className="play-area">
         <div className="deck-pile" aria-label={`${leftInDeck} cards left`}>
           <div className="card mini">
             <CardBack small standalone />
           </div>
           <span>{leftInDeck}</span>
         </div>
+        <motion.button
+          className="card mini setup-mini"
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setShowVillages(true)}
+          aria-label="Village set-up card"
+        >
+          <MapPin size={18} />
+        </motion.button>
+        <button className="icon-btn new-game" onClick={() => setConfirmNew(true)} aria-label="New game">
+          <RotateCcw size={20} />
+        </button>
+      </header>
+
+      <section className="play-area">
 
         <div className="terrain-row">
           <AnimatePresence custom={dir} initial={true} mode="popLayout">
@@ -289,6 +304,9 @@ function Table({
         <div className="bonus-cards">
           {LETTERS.map((l) => (
             <BonusCard key={l} letter={l} mode={game.mode} claimed={game.claimed[l]} onTap={() => tapBonus(l)} />
+          ))}
+          {game.red?.map((r, i) => (
+            <RedBonusCard key={`red-${r}`} index={r} claimed={!!game.redClaimed?.[i]} onTap={() => tapRed(i)} />
           ))}
         </div>
       </section>

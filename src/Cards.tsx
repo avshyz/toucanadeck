@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
-import { Mountain, Sparkles, Sun, Trees, Waves, Check } from 'lucide-react'
+import { Check, Crown, Flame, Gem, Mountain, Shell, Sparkles, Star, Sun, Trees, Waves } from 'lucide-react'
 import type { ComponentType } from 'react'
-import { bonusStack, type Letter, type PlayerMode, type Terrain } from './game'
+import { bonusStack, RED_BONUS, type Letter, type PlayerMode, type Sight, type Terrain } from './game'
 
 const TERRAIN: Record<Terrain, { name: string; Icon: ComponentType<{ size?: number; strokeWidth?: number }> }> = {
   desert: { name: 'Desert', Icon: Sun },
@@ -159,5 +159,47 @@ export function SetupCard({ letters }: { letters: Letter[] }) {
       </div>
       <CardBack />
     </motion.div>
+  )
+}
+
+const SIGHT_ICON: Record<Sight, ComponentType<{ size?: number; strokeWidth?: number }>> = {
+  gem: Gem,
+  crown: Crown,
+  shell: Shell,
+  flame: Flame,
+  star: Star,
+}
+
+/** Red special-bonus card: connect two of the shown sight. Tap = claimed (flip), tap again = undo. */
+export function RedBonusCard({ index, claimed, onTap }: { index: number; claimed: boolean; onTap: () => void }) {
+  const { sight, value } = RED_BONUS[index]
+  const Icon = SIGHT_ICON[sight]
+  return (
+    <button className="bonus-slot" onClick={onTap} aria-label={`Special bonus ${sight}, ${value} points`}>
+      <motion.div
+        className="card bonus-card red-card"
+        initial={{ rotateY: 180, y: 20, opacity: 0 }}
+        animate={{ rotateY: claimed ? 180 : 0, y: 0, opacity: 1 }}
+        whileTap={{ scale: 0.93 }}
+        transition={{ type: 'spring', stiffness: 220, damping: 18 }}
+        style={{ transformStyle: 'preserve-3d' }}
+      >
+        <div className="face front bonus-face red-face">
+          <span className="sights">
+            <Icon size={16} strokeWidth={2.4} />
+            <Icon size={16} strokeWidth={2.4} />
+          </span>
+          <span className="value">{value}</span>
+          <span className="label">bonus</span>
+        </div>
+        <div className="face front flipped bonus-face claimed">
+          <span className="sights">
+            <Icon size={16} strokeWidth={2.4} />
+          </span>
+          <Check size={26} strokeWidth={3} />
+          <span className="label">claimed</span>
+        </div>
+      </motion.div>
+    </button>
   )
 }

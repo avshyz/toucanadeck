@@ -237,9 +237,24 @@ main {
 
 .topbar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 14px;
   padding-top: 14px;
+}
+
+.topbar .new-game {
+  margin-left: auto; /* kept apart from the other controls */
+}
+
+.setup-mini {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: radial-gradient(circle, #f6ecd2, #e2cf9f);
+  color: #3a2a10;
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.4);
 }
 
 .status {
@@ -291,9 +306,6 @@ main {
 }
 
 .deck-pile {
-  position: absolute;
-  top: 8px;
-  right: 0;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -343,17 +355,21 @@ main {
 .bonus-cards {
   display: flex;
   justify-content: center;
-  gap: 2vw;
+  flex-wrap: wrap;
+  gap: 8px;
   perspective: 800px;
 }
 
 .bonus-slot {
   padding: 0;
+  /* all cards share one size: fit 7 per row, but never below 56px (then wrap) */
+  flex: none;
+  width: clamp(56px, calc((100% - 6 * 8px) / 7), var(--bonus-w));
 }
 
 .bonus-card {
-  width: var(--bonus-w);
-  height: calc(var(--bonus-w) * 1.4);
+  width: 100%;
+  aspect-ratio: 1 / 1.4;
   border-radius: 10px;
 }
 
@@ -375,7 +391,7 @@ main {
 }
 
 .bonus-face .value {
-  font-size: clamp(1.6rem, 8vw, 2.2rem);
+  font-size: clamp(1.2rem, 7vw, 2.2rem);
   font-weight: 700;
   line-height: 1;
   color: var(--gold);
@@ -538,3 +554,13 @@ main {
   font-size: 0.9rem;
   margin-top: -6px;
 }
+
+/* Red special-bonus cards */
+.red-face {
+  background: linear-gradient(170deg, #e0524a, #a3242b);
+}
+.bonus-face .sights {
+  display: flex;
+  gap: 2px;
+}
+

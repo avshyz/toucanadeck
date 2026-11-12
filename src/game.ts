@@ -17,6 +17,16 @@ export const BONUS: Record<Letter, [number, number]> = {
   E: [7, 5],
 }
 
+/** Red "special bonus" cards: placeholder sights & values (swap for the real ones). */
+export type Sight = 'gem' | 'crown' | 'shell' | 'flame' | 'star'
+export const RED_BONUS: { sight: Sight; value: number }[] = [
+  { sight: 'gem', value: 4 },
+  { sight: 'crown', value: 5 },
+  { sight: 'shell', value: 5 },
+  { sight: 'flame', value: 6 },
+  { sight: 'star', value: 7 },
+]
+
 export const MODE_LABEL: Record<PlayerMode, string> = { solo: 'Solo', small: '2–4', large: '5–8' }
 
 export interface Game {
@@ -25,6 +35,8 @@ export interface Game {
   decks: Terrain[][] // one shuffled deck per round (length = number of rounds)
   step: number // 0..totalTurns(game) (totalTurns = game over)
   claimed: Record<Letter, number> // bonus cards taken per letter
+  red?: number[] // indices into RED_BONUS drawn for this game
+  redClaimed?: boolean[]
   villages: Letter[] // set-up card: 10 letters, read clockwise from the top
 }
 
@@ -58,6 +70,8 @@ export function newGame(mode: PlayerMode, rounds: Rounds): Game {
     decks: Array.from({ length: rounds }, () => shuffle(fullDeck())),
     step: 0,
     claimed: { A: 0, B: 0, C: 0, D: 0, E: 0 },
+    red: shuffle(RED_BONUS.map((_, i) => i)).slice(0, mode === 'large' ? 2 : 1),
+    redClaimed: [false, false],
     villages: setupCard(),
   }
 }
