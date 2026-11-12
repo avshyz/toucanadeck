@@ -239,6 +239,12 @@ function Table({
   const cards = over ? null : cardsAt(game, game.step)
   const leftInDeck = over ? 0 : DECK_SIZE - (turn + 1) * 2
 
+  // On game over the HUD fades and shrinks away, leaving the game-over panel (and undo).
+  const hud = {
+    animate: over ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 },
+    transition: { duration: 0.45, ease: 'easeInOut' as const },
+    style: { pointerEvents: over ? ('none' as const) : undefined },
+  }
   const lastTurnOfRound = !over && turn === TURNS_PER_ROUND - 1
   const finalRound = round === game.decks.length - 1
   const [roundEnd, setRoundEnd] = useState(false)
@@ -282,7 +288,7 @@ function Table({
 
   return (
     <motion.main className="table" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-      <header className="topbar">
+      <motion.header className="topbar" {...hud}>
         <div className="status">
           <span className="round">
             Round {round + 1}/{game.decks.length}
@@ -308,7 +314,7 @@ function Table({
         <button className="icon-btn new-game" onClick={() => setConfirmNew(true)} aria-label="New game">
           <RotateCcw size={20} />
         </button>
-      </header>
+      </motion.header>
 
       <section className="play-area">
 
@@ -319,7 +325,7 @@ function Table({
               <div className="card-shadow" style={{ gridColumn: 2 }} />
             </>
           )}
-          <AnimatePresence custom={dir} initial={true}>
+          <AnimatePresence custom={over ? 0 : dir} initial={true}>
             {cards?.map((t, i) => <TerrainCard key={`${game.step}-${i}`} terrain={t} index={i} dir={dir} />)}
           </AnimatePresence>
           <AnimatePresence>
@@ -352,7 +358,7 @@ function Table({
         </AnimatePresence>
       </section>
 
-      <section className="bonus-row" aria-label="Connection bonuses">
+      <motion.section className="bonus-row" aria-label="Connection bonuses" {...hud}>
         <h3>First to connect</h3>
         <div className="bonus-cards">
           {LETTERS.map((l, i) => (
@@ -362,13 +368,13 @@ function Table({
             <RedBonusCard key={`red-${r}`} order={claimedBefore(LETTERS.length + i)} index={r} claimed={!!game.redClaimed?.[i]} onTap={() => tapRed(i)} />
           ))}
         </div>
-      </section>
+      </motion.section>
 
       <div className="fabs">
         <motion.button className="fab undo" whileTap={{ scale: 0.88 }} onClick={() => go(-1)} disabled={game.step === 0} aria-label="Undo">
           <Undo2 size={24} />
         </motion.button>
-        <motion.button className="fab next" whileTap={{ scale: 0.9 }} onClick={() => go(1)} disabled={over} aria-label="Next">
+        <motion.button className="fab next" whileTap={{ scale: 0.9 }} onClick={() => go(1)} disabled={over} aria-label="Next" {...hud}>
           <ArrowRight size={30} strokeWidth={2.5} />
         </motion.button>
       </div>

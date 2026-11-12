@@ -60,7 +60,7 @@ const DECK_POS = { x: 170, y: -260, rotateY: 180, rotateZ: 14, opacity: 0, scale
 const DISCARD_POS = { x: -190, y: 200, rotateY: 0, rotateZ: -16, opacity: 0, scale: 0.8 }
 
 export function TerrainCard({ terrain, index, dir }: { terrain: Terrain; index: number; dir: Dir }) {
-  // `custom` (dir) is supplied by AnimatePresence so exiting cards use the latest direction.
+  // `custom` (dir, or 0 on game over) is supplied by AnimatePresence so exiting cards use the latest value.
   const variants = {
     enter: (d: Dir) => (d === 1 ? DECK_POS : DISCARD_POS),
     center: {
@@ -72,10 +72,14 @@ export function TerrainCard({ terrain, index, dir }: { terrain: Terrain; index: 
       scale: 1,
       transition: { type: 'spring' as const, stiffness: 160, damping: 19, delay: 0.12 + index * 0.16 },
     },
-    exit: (d: Dir) => ({
-      ...(d === 1 ? DISCARD_POS : DECK_POS),
-      transition: { duration: 0.32, ease: 'easeIn' as const, delay: index * 0.05 },
-    }),
+    // 0 = game over: fade and shrink in place, matching the HUD
+    exit: (d: Dir | 0) =>
+      d === 0
+        ? { opacity: 0, scale: 0.9, transition: { duration: 0.45, ease: 'easeInOut' as const } }
+        : {
+            ...(d === 1 ? DISCARD_POS : DECK_POS),
+            transition: { duration: 0.32, ease: 'easeIn' as const, delay: index * 0.05 },
+          },
   }
   return (
     <motion.div
