@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion'
-import { Check, Crown, Flame, Gem, Mountain, Shell, Sparkles, Star, Sun, Trees, Waves } from 'lucide-react'
+import { Check, Mountain, Sparkles, Sun, Trees, Waves } from 'lucide-react'
+import { SIGHT_ICON, SIGHT_NAME } from './SightIcons'
 import { useEffect, useState, type ComponentType } from 'react'
-import { bonusStack, RED_BONUS, type Letter, type PlayerMode, type Sight, type Terrain } from './game'
+import { bonusStack, RED_BONUS, type Letter, type PlayerMode, type Terrain } from './game'
 
 const TERRAIN: Record<Terrain, { name: string; Icon: ComponentType<{ size?: number; strokeWidth?: number }> }> = {
   desert: { name: 'Desert', Icon: Sun },
@@ -188,13 +189,6 @@ export function SetupCard({ letters }: { letters: Letter[] }) {
   )
 }
 
-const SIGHT_ICON: Record<Sight, ComponentType<{ size?: number; strokeWidth?: number }>> = {
-  gem: Gem,
-  crown: Crown,
-  shell: Shell,
-  flame: Flame,
-  star: Star,
-}
 
 /** Red special-bonus card: connect two of the shown sight. Tap = claimed (flip), tap again = undo. */
 export function RedBonusCard({ index, claimed: savedClaimed, onTap, order }: { index: number; claimed: boolean; onTap: () => void; order: number }) {
@@ -202,7 +196,7 @@ export function RedBonusCard({ index, claimed: savedClaimed, onTap, order }: { i
   const { sight, value } = RED_BONUS[index]
   const Icon = SIGHT_ICON[sight]
   return (
-    <button className="bonus-slot" onClick={onTap} aria-label={`Special bonus ${sight}, ${value} points`}>
+    <button className="bonus-slot" onClick={onTap} aria-label={`Special bonus: two ${SIGHT_NAME[sight]}s, ${value} points`}>
       <motion.div
         className="card bonus-card red-card"
         initial={false}
@@ -213,15 +207,15 @@ export function RedBonusCard({ index, claimed: savedClaimed, onTap, order }: { i
       >
         <div className="face front bonus-face red-face">
           <span className="sights">
-            <Icon size={16} strokeWidth={2.4} />
-            <Icon size={16} strokeWidth={2.4} />
+            <Icon size={20} strokeWidth={2.2} />
+            <Icon size={20} strokeWidth={2.2} />
           </span>
           <span className="value">{value}</span>
           <span className="label">bonus</span>
         </div>
         <div className="face front flipped bonus-face claimed">
           <span className="sights">
-            <Icon size={16} strokeWidth={2.4} />
+            <Icon size={20} strokeWidth={2.2} />
           </span>
           <Check size={26} strokeWidth={3} />
           <span className="label">claimed</span>

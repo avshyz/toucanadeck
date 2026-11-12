@@ -17,14 +17,14 @@ export const BONUS: Record<Letter, [number, number]> = {
   E: [7, 5],
 }
 
-/** Red "special bonus" cards: placeholder sights & values (swap for the real ones). */
-export type Sight = 'gem' | 'crown' | 'shell' | 'flame' | 'star'
+/** Red "special bonus" cards: first to connect two of the shown sight scores the value. */
+export type Sight = 'cat' | 'serpent' | 'obelisk' | 'book' | 'toucan'
 export const RED_BONUS: { sight: Sight; value: number }[] = [
-  { sight: 'gem', value: 4 },
-  { sight: 'crown', value: 5 },
-  { sight: 'shell', value: 5 },
-  { sight: 'flame', value: 6 },
-  { sight: 'star', value: 7 },
+  { sight: 'cat', value: 6 },
+  { sight: 'serpent', value: 6 },
+  { sight: 'obelisk', value: 6 },
+  { sight: 'book', value: 6 },
+  { sight: 'toucan', value: 6 },
 ]
 
 export const MODE_LABEL: Record<PlayerMode, string> = { solo: 'Solo', small: '2–4', large: '5–8' }
