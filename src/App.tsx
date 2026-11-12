@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowRight, MapPin, RotateCcw, Undo2, X } from 'lucide-react'
+import { ArrowRight, Flag, Hourglass, MapPin, RotateCcw, Undo2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { BonusCard, CardBack, RedBonusCard, SetupCard, TerrainCard, type Dir } from './Cards'
 import {
@@ -227,9 +227,20 @@ function Table({
   const cards = over ? null : cardsAt(game, game.step)
   const leftInDeck = over ? 0 : DECK_SIZE - (turn + 1) * 2
 
-  const go = (d: Dir) => {
+  const lastTurnOfRound = !over && turn === TURNS_PER_ROUND - 1
+  const finalRound = round === game.decks.length - 1
+  const [roundEnd, setRoundEnd] = useState(false)
+
+  const go = (d: Dir, confirmed = false) => {
     const step = game.step + d
     if (step < 0 || step > total) return
+    // Leaving the last turn of a round needs an explicit confirm (scoring happens here).
+    if (d === 1 && lastTurnOfRound && !confirmed) {
+      navigator.vibrate?.([20, 60, 20])
+      setRoundEnd(true)
+      return
+    }
+    setRoundEnd(false)
     setDir(d)
     navigator.vibrate?.(12)
     if (d === -1) playUndo()
@@ -311,9 +322,17 @@ function Table({
         </div>
 
         <AnimatePresence>
-          {!over && turn === 0 && round > 0 && (
-            <motion.div key={round} className="toast" initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }}>
-              Round {round + 1} — deck reshuffled. Score sights!
+          {lastTurnOfRound && (
+            <motion.div
+              key={round}
+              className="last-turn"
+              initial={{ y: -12, opacity: 0, scale: 0.9 }}
+              animate={{ y: 0, opacity: 1, scale: [1, 1.04, 1] }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ scale: { repeat: Infinity, duration: 1.4, ease: 'easeInOut' } }}
+            >
+              <Hourglass size={18} strokeWidth={2.5} />
+              Last card left — {finalRound ? 'game' : 'round'} end in sight
             </motion.div>
           )}
         </AnimatePresence>
@@ -341,6 +360,27 @@ function Table({
       </div>
 
       <AnimatePresence>
+        {roundEnd && (
+          <Modal key="round-end" onClose={() => setRoundEnd(false)}>
+            <div className="round-end-icon">
+              <Flag size={34} strokeWidth={2.4} />
+            </div>
+            <h2>{finalRound ? 'Game over!' : `Round ${round + 1} over!`}</h2>
+            <p>
+              {finalRound
+                ? 'Final scoring: sights, villages & bonuses.'
+                : `Everyone scores their sights now. The deck gets reshuffled for round ${round + 2}.`}
+            </p>
+            <div className="modal-actions">
+              <button className="link-btn" onClick={() => setRoundEnd(false)}>
+                Not yet
+              </button>
+              <button className="start-btn small" onClick={() => go(1, true)}>
+                {finalRound ? 'Finish' : `Start round ${round + 2}`}
+              </button>
+            </div>
+          </Modal>
+        )}
         {confirmNew && (
           <Modal key="confirm" onClose={() => setConfirmNew(false)}>
             <h2>Start a new game?</h2>
