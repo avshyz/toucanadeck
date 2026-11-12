@@ -302,11 +302,11 @@ function Table({
       <section className="bonus-row" aria-label="Connection bonuses">
         <h3>First to connect</h3>
         <div className="bonus-cards">
-          {LETTERS.map((l) => (
-            <BonusCard key={l} letter={l} mode={game.mode} claimed={game.claimed[l]} onTap={() => tapBonus(l)} />
+          {LETTERS.map((l, i) => (
+            <BonusCard key={l} order={i} letter={l} mode={game.mode} claimed={game.claimed[l]} onTap={() => tapBonus(l)} />
           ))}
           {game.red?.map((r, i) => (
-            <RedBonusCard key={`red-${r}`} index={r} claimed={!!game.redClaimed?.[i]} onTap={() => tapRed(i)} />
+            <RedBonusCard key={`red-${r}`} order={LETTERS.length + i} index={r} claimed={!!game.redClaimed?.[i]} onTap={() => tapRed(i)} />
           ))}
         </div>
       </section>

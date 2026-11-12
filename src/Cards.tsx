@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { Check, Crown, Flame, Gem, Mountain, Shell, Sparkles, Star, Sun, Trees, Waves } from 'lucide-react'
-import type { ComponentType } from 'react'
+import { useState, type ComponentType } from 'react'
 import { bonusStack, RED_BONUS, type Letter, type PlayerMode, type Sight, type Terrain } from './game'
 
 const TERRAIN: Record<Terrain, { name: string; Icon: ComponentType<{ size?: number; strokeWidth?: number }> }> = {
@@ -36,6 +36,17 @@ function TerrainFace({ terrain }: { terrain: Terrain }) {
 }
 
 export type Dir = 1 | -1
+
+const BONUS_SPRING = { type: 'spring' as const, stiffness: 220, damping: 18 }
+
+/** First render: start face-down and flip in after `order * 70ms`; later taps flip immediately. */
+function useDealIn(order: number) {
+  const [dealt, setDealt] = useState(false)
+  return {
+    transition: { ...BONUS_SPRING, delay: dealt ? 0 : 0.15 + order * 0.07 },
+    onAnimationComplete: () => setDealt(true),
+  }
+}
 
 /** A terrain card that flies in from the deck (next) or back from the discard (undo), flipping face-up. */
 const DECK_POS = { x: 170, y: -260, rotateY: 180, rotateZ: 14, opacity: 0, scale: 0.8 }
@@ -81,12 +92,15 @@ export function BonusCard({
   mode,
   claimed,
   onTap,
+  order,
 }: {
   letter: Letter
   mode: PlayerMode
   claimed: number
   onTap: () => void
+  order: number
 }) {
+  const deal = useDealIn(order)
   const stack = bonusStack(mode, letter)
   const content = (i: number) =>
     i < 0 ? null : i < stack.length ? (
@@ -116,9 +130,10 @@ export function BonusCard({
     <button className="bonus-slot" onClick={onTap} aria-label={`Bonus ${letter}-${letter}`}>
       <motion.div
         className={`card bonus-card ${done ? 'done' : ''}`}
-        animate={{ rotateY: claimed * 180 }}
+        initial={{ rotateY: claimed * 180, rotateX: -90, opacity: 0 }}
+        animate={{ rotateY: claimed * 180, rotateX: 0, opacity: 1 }}
         whileTap={{ scale: 0.93 }}
-        transition={{ type: 'spring', stiffness: 220, damping: 18 }}
+        {...deal}
         style={{ transformStyle: 'preserve-3d' }}
       >
         <div className={`face front bonus-face ${even >= stack.length ? 'claimed' : ''}`}>{content(even)}</div>
@@ -171,17 +186,18 @@ const SIGHT_ICON: Record<Sight, ComponentType<{ size?: number; strokeWidth?: num
 }
 
 /** Red special-bonus card: connect two of the shown sight. Tap = claimed (flip), tap again = undo. */
-export function RedBonusCard({ index, claimed, onTap }: { index: number; claimed: boolean; onTap: () => void }) {
+export function RedBonusCard({ index, claimed, onTap, order }: { index: number; claimed: boolean; onTap: () => void; order: number }) {
+  const deal = useDealIn(order)
   const { sight, value } = RED_BONUS[index]
   const Icon = SIGHT_ICON[sight]
   return (
     <button className="bonus-slot" onClick={onTap} aria-label={`Special bonus ${sight}, ${value} points`}>
       <motion.div
         className="card bonus-card red-card"
-        initial={{ rotateY: 180, y: 20, opacity: 0 }}
-        animate={{ rotateY: claimed ? 180 : 0, y: 0, opacity: 1 }}
+        initial={{ rotateY: claimed ? 180 : 0, rotateX: -90, opacity: 0 }}
+        animate={{ rotateY: claimed ? 180 : 0, rotateX: 0, opacity: 1 }}
         whileTap={{ scale: 0.93 }}
-        transition={{ type: 'spring', stiffness: 220, damping: 18 }}
+        {...deal}
         style={{ transformStyle: 'preserve-3d' }}
       >
         <div className="face front bonus-face red-face">
