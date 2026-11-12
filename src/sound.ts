@@ -69,3 +69,23 @@ export function playFlip() {
   if (!ac) return
   tone(ac, 660, ac.currentTime, 0.08, 'square', 0.06)
 }
+
+/** Round over: short rising three-note fanfare. */
+export function playRoundEnd() {
+  const ac = audio()
+  if (!ac) return
+  const t = ac.currentTime
+  ;[523.25, 659.25, 783.99].forEach((f, i) => tone(ac, f, t + i * 0.13, 0.22, 'triangle', 0.2))
+  tone(ac, 1046.5, t + 0.42, 0.45, 'triangle', 0.16)
+}
+
+/** Game over: longer fanfare ending on a sustained major chord. */
+export function playGameEnd() {
+  const ac = audio()
+  if (!ac) return
+  const t = ac.currentTime
+  ;[392, 523.25, 659.25, 783.99, 659.25, 783.99].forEach((f, i) => tone(ac, f, t + i * 0.12, 0.2, 'triangle', 0.18))
+  const end = t + 0.8
+  ;[523.25, 659.25, 783.99, 1046.5].forEach((f) => tone(ac, f, end, 1.2, 'triangle', 0.12))
+  tone(ac, 261.63, end, 1.2, 'sine', 0.15)
+}

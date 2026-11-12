@@ -19,7 +19,7 @@ import {
   type PlayerMode,
   type Rounds,
 } from './game'
-import { playDraw, playFlip, playUndo } from './sound'
+import { playDraw, playFlip, playGameEnd, playRoundEnd, playUndo } from './sound'
 import { useWakeLock } from './useWakeLock'
 
 export default function App() {
@@ -237,6 +237,8 @@ function Table({
     // Leaving the last turn of a round needs an explicit confirm (scoring happens here).
     if (d === 1 && lastTurnOfRound && !confirmed) {
       navigator.vibrate?.([20, 60, 20])
+      if (finalRound) playGameEnd()
+      else playRoundEnd()
       setRoundEnd(true)
       return
     }
