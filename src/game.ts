@@ -53,12 +53,27 @@ function fullDeck(): Terrain[] {
   return (Object.keys(DECK_COUNTS) as Terrain[]).flatMap((t) => Array(DECK_COUNTS[t]).fill(t))
 }
 
-/** Random set-up card: two of each letter, no identical letters next to each other (circularly). */
-export function setupCard(): Letter[] {
-  for (;;) {
-    const c = shuffle([...LETTERS, ...LETTERS])
-    if (c.every((l, i) => l !== c[(i + 1) % c.length])) return c
-  }
+/** The 13 printed set-up cards, read clockwise starting from the red letter at the top. */
+export const SETUP_CARDS: string[] = [
+  'ADCBDACEBE',
+  'BEDCBADECA',
+  'EBDBACAECD',
+  'DCEADCBAEB',
+  'EADBCEBDAC',
+  'DADBAECECB',
+  'ECAEBDABDC',
+  'DBACECDAEB',
+  'ACBDCDEBAE',
+  'BDCAEBEDCA',
+  'BACBDCEAED',
+  'CAECBADEBD',
+  'CEBAEDCDAB',
+]
+
+/** Draw one of the set-up cards at random (never the same as `current`). */
+export function setupCard(current?: Letter[]): Letter[] {
+  const options = SETUP_CARDS.filter((c) => c !== current?.join(''))
+  return options[Math.floor(Math.random() * options.length)].split('') as Letter[]
 }
 
 export const totalTurns = (game: Game) => game.decks.length * TURNS_PER_ROUND

@@ -404,7 +404,7 @@ function Table({
             <SetupCard key={game.villages.join('')} letters={game.villages} />
             <div className="modal-actions">
               {game.step === 0 && (
-                <button className="link-btn" onClick={() => setGame({ ...game, villages: setupCard() })}>
+                <button className="link-btn" onClick={() => setGame({ ...game, villages: setupCard(game.villages) })}>
                   Draw another
                 </button>
               )}

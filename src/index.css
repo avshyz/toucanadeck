@@ -545,11 +545,13 @@ main {
   font-weight: 600;
 }
 
-.letter-A { background: #d9534f; }
-.letter-B { background: #3d7fd9; }
-.letter-C { background: #2e9e5b; }
-.letter-D { background: #9b59b6; }
-.letter-E { background: #e08a1e; }
+.setup-letter {
+  background: #262a4a; /* navy, like the printed cards */
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.15);
+}
+.setup-letter.first {
+  background: #c8432b; /* starting letter is red on the card */
+}
 
 .setup-center {
   font-size: 0.7rem;

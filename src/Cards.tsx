@@ -174,7 +174,7 @@ export function SetupCard({ letters }: { letters: Letter[] }) {
           return (
             <span
               key={i}
-              className={`setup-letter letter-${l}`}
+              className={`setup-letter ${i === 0 ? 'first' : ''}`}
               style={{ left: `${50 + 38 * Math.sin(a)}%`, top: `${50 - 38 * Math.cos(a)}%` }}
             >
               {l}
