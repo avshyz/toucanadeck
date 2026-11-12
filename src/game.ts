@@ -5,8 +5,8 @@ export type PlayerMode = 'solo' | 'small' | 'large'
 export const LETTERS: Letter[] = ['A', 'B', 'C', 'D', 'E']
 export const DECK_COUNTS: Record<Terrain, number> = { desert: 8, forest: 7, mountain: 6, water: 4, any: 2 }
 export const TURNS_PER_ROUND = 13
-export const ROUNDS = 2
-export const TOTAL_TURNS = TURNS_PER_ROUND * ROUNDS
+export const DECK_SIZE = Object.values(DECK_COUNTS).reduce((a, b) => a + b, 0)
+export type Rounds = 2 | 3
 
 /** Bonus values per letter: [#1 card, #2 card] */
 export const BONUS: Record<Letter, [number, number]> = {
@@ -22,10 +22,10 @@ export const MODE_LABEL: Record<PlayerMode, string> = { solo: 'Solo', small: '2â
 export interface Game {
   id: number
   mode: PlayerMode
-  decks: Terrain[][] // one shuffled deck per round
-  step: number // 0..TOTAL_TURNS (TOTAL_TURNS = game over)
+  decks: Terrain[][] // one shuffled deck per round (length = number of rounds)
+  step: number // 0..totalTurns(game) (totalTurns = game over)
   claimed: Record<Letter, number> // bonus cards taken per letter
-  villages: Letter[] // 10 letters, village 1..10
+  villages: Letter[] // set-up card: 10 letters, read clockwise from the top
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -41,14 +41,24 @@ function fullDeck(): Terrain[] {
   return (Object.keys(DECK_COUNTS) as Terrain[]).flatMap((t) => Array(DECK_COUNTS[t]).fill(t))
 }
 
-export function newGame(mode: PlayerMode): Game {
+/** Random set-up card: two of each letter, no identical letters next to each other (circularly). */
+export function setupCard(): Letter[] {
+  for (;;) {
+    const c = shuffle([...LETTERS, ...LETTERS])
+    if (c.every((l, i) => l !== c[(i + 1) % c.length])) return c
+  }
+}
+
+export const totalTurns = (game: Game) => game.decks.length * TURNS_PER_ROUND
+
+export function newGame(mode: PlayerMode, rounds: Rounds): Game {
   return {
     id: Date.now(),
     mode,
-    decks: Array.from({ length: ROUNDS }, () => shuffle(fullDeck())),
+    decks: Array.from({ length: rounds }, () => shuffle(fullDeck())),
     step: 0,
     claimed: { A: 0, B: 0, C: 0, D: 0, E: 0 },
-    villages: shuffle([...LETTERS, ...LETTERS]),
+    villages: setupCard(),
   }
 }
 

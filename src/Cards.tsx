@@ -8,7 +8,7 @@ const TERRAIN: Record<Terrain, { name: string; Icon: ComponentType<{ size?: numb
   forest: { name: 'Forest', Icon: Trees },
   mountain: { name: 'Mountain', Icon: Mountain },
   water: { name: 'Water', Icon: Waves },
-  any: { name: 'Any', Icon: Sparkles },
+  any: { name: 'Joker', Icon: Sparkles },
 }
 
 export function CardBack({ small, standalone }: { small?: boolean; standalone?: boolean }) {
@@ -125,5 +125,39 @@ export function BonusCard({
         <div className={`face front flipped bonus-face ${odd >= stack.length ? 'claimed' : ''}`}>{content(odd)}</div>
       </motion.div>
     </button>
+  )
+}
+
+/** Village set-up card: deals in face down and flips, letters placed clockwise from the top. */
+export function SetupCard({ letters }: { letters: Letter[] }) {
+  return (
+    <motion.div
+      className="card setup-card"
+      initial={{ rotateY: 180, scale: 0.7, y: 30 }}
+      animate={{ rotateY: 0, scale: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 140, damping: 16, delay: 0.15 }}
+      style={{ transformStyle: 'preserve-3d' }}
+    >
+      <div className="face front setup-face">
+        <span className="setup-start" aria-hidden>
+          ▼
+        </span>
+        {letters.map((l, i) => {
+          const a = (i / letters.length) * 2 * Math.PI
+          return (
+            <span
+              key={i}
+              className={`setup-letter letter-${l}`}
+              style={{ left: `${50 + 38 * Math.sin(a)}%`, top: `${50 - 38 * Math.cos(a)}%` }}
+            >
+              {l}
+              <small>{i + 1}</small>
+            </span>
+          )
+        })}
+        <span className="setup-center">clockwise</span>
+      </div>
+      <CardBack />
+    </motion.div>
   )
 }
