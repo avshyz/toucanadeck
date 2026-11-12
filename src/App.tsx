@@ -177,12 +177,12 @@ function Splash({
             </motion.div>
           ) : (
             <motion.div key="continue" className="splash-controls" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <motion.button className="start-btn" whileTap={{ scale: 0.94 }} {...pulse} onClick={onContinue}>
+              <motion.button className="start-btn continue-btn" whileTap={{ scale: 0.94 }} {...pulse} onClick={onContinue}>
                 Continue
+                <span className="resume-info">
+                  Round {turnInfo(saved!.step).round + 1}/{saved!.decks.length} · Turn {turnInfo(saved!.step).turn + 1}
+                </span>
               </motion.button>
-              <span className="resume-info">
-                Round {turnInfo(saved!.step).round + 1}/{saved!.decks.length} · Turn {turnInfo(saved!.step).turn + 1}
-              </span>
               <button className="link-btn" onClick={() => setSetupOpen(true)}>
                 New game
               </button>
@@ -233,6 +233,10 @@ function Table({
     playFlip()
     setGame({ ...game, claimed: { ...game.claimed, [l]: next } })
   }
+
+  // Position of a bonus card among the claimed ones to its left (drives the load-time flip order).
+  const claimedFlags = [...LETTERS.map((l) => game.claimed[l] > 0), ...(game.red ?? []).map((_, i) => !!game.redClaimed?.[i])]
+  const claimedBefore = (pos: number) => claimedFlags.slice(0, pos).filter(Boolean).length
 
   const tapRed = (i: number) => {
     const redClaimed = [...(game.redClaimed ?? [false, false])]
@@ -303,10 +307,10 @@ function Table({
         <h3>First to connect</h3>
         <div className="bonus-cards">
           {LETTERS.map((l, i) => (
-            <BonusCard key={l} order={i} letter={l} mode={game.mode} claimed={game.claimed[l]} onTap={() => tapBonus(l)} />
+            <BonusCard key={l} order={claimedBefore(i)} letter={l} mode={game.mode} claimed={game.claimed[l]} onTap={() => tapBonus(l)} />
           ))}
           {game.red?.map((r, i) => (
-            <RedBonusCard key={`red-${r}`} order={LETTERS.length + i} index={r} claimed={!!game.redClaimed?.[i]} onTap={() => tapRed(i)} />
+            <RedBonusCard key={`red-${r}`} order={claimedBefore(LETTERS.length + i)} index={r} claimed={!!game.redClaimed?.[i]} onTap={() => tapRed(i)} />
           ))}
         </div>
       </section>

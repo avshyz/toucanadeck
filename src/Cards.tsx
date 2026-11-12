@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { Check, Crown, Flame, Gem, Mountain, Shell, Sparkles, Star, Sun, Trees, Waves } from 'lucide-react'
-import { useState, type ComponentType } from 'react'
+import { useEffect, useState, type ComponentType } from 'react'
 import { bonusStack, RED_BONUS, type Letter, type PlayerMode, type Sight, type Terrain } from './game'
 
 const TERRAIN: Record<Terrain, { name: string; Icon: ComponentType<{ size?: number; strokeWidth?: number }> }> = {
@@ -39,13 +39,24 @@ export type Dir = 1 | -1
 
 const BONUS_SPRING = { type: 'spring' as const, stiffness: 220, damping: 18 }
 
-/** First render: start face-down and flip in after `order * 70ms`; later taps flip immediately. */
-function useDealIn(order: number) {
-  const [dealt, setDealt] = useState(false)
-  return {
-    transition: { ...BONUS_SPRING, delay: dealt ? 0 : 0.15 + order * 0.07 },
-    onAnimationComplete: () => setDealt(true),
-  }
+/**
+ * On load every bonus card shows its fresh side; saved claims are then replayed as flips,
+ * one card after another (`order` = position among claimed cards), one step at a time.
+ * After that the value is followed directly so taps flip immediately.
+ */
+function useReplayed(value: number, order: number) {
+  const [shown, setShown] = useState(0)
+  const [live, setLive] = useState(value === 0)
+  useEffect(() => {
+    if (live) return
+    if (shown >= value) {
+      setLive(true)
+      return
+    }
+    const t = setTimeout(() => setShown((s) => s + 1), shown === 0 ? 450 + order * 110 : 180)
+    return () => clearTimeout(t)
+  }, [live, shown, value, order])
+  return live ? value : shown
 }
 
 /** A terrain card that flies in from the deck (next) or back from the discard (undo), flipping face-up. */
@@ -90,7 +101,7 @@ export function TerrainCard({ terrain, index, dir }: { terrain: Terrain; index: 
 export function BonusCard({
   letter,
   mode,
-  claimed,
+  claimed: savedClaimed,
   onTap,
   order,
 }: {
@@ -100,7 +111,7 @@ export function BonusCard({
   onTap: () => void
   order: number
 }) {
-  const deal = useDealIn(order)
+  const claimed = useReplayed(savedClaimed, order)
   const stack = bonusStack(mode, letter)
   const content = (i: number) =>
     i < 0 ? null : i < stack.length ? (
@@ -130,10 +141,10 @@ export function BonusCard({
     <button className="bonus-slot" onClick={onTap} aria-label={`Bonus ${letter}-${letter}`}>
       <motion.div
         className={`card bonus-card ${done ? 'done' : ''}`}
-        initial={{ rotateY: claimed * 180, rotateX: -90, opacity: 0 }}
-        animate={{ rotateY: claimed * 180, rotateX: 0, opacity: 1 }}
+        initial={false}
+        animate={{ rotateY: claimed * 180 }}
         whileTap={{ scale: 0.93 }}
-        {...deal}
+        transition={BONUS_SPRING}
         style={{ transformStyle: 'preserve-3d' }}
       >
         <div className={`face front bonus-face ${even >= stack.length ? 'claimed' : ''}`}>{content(even)}</div>
@@ -186,18 +197,18 @@ const SIGHT_ICON: Record<Sight, ComponentType<{ size?: number; strokeWidth?: num
 }
 
 /** Red special-bonus card: connect two of the shown sight. Tap = claimed (flip), tap again = undo. */
-export function RedBonusCard({ index, claimed, onTap, order }: { index: number; claimed: boolean; onTap: () => void; order: number }) {
-  const deal = useDealIn(order)
+export function RedBonusCard({ index, claimed: savedClaimed, onTap, order }: { index: number; claimed: boolean; onTap: () => void; order: number }) {
+  const claimed = useReplayed(savedClaimed ? 1 : 0, order) === 1
   const { sight, value } = RED_BONUS[index]
   const Icon = SIGHT_ICON[sight]
   return (
     <button className="bonus-slot" onClick={onTap} aria-label={`Special bonus ${sight}, ${value} points`}>
       <motion.div
         className="card bonus-card red-card"
-        initial={{ rotateY: claimed ? 180 : 0, rotateX: -90, opacity: 0 }}
-        animate={{ rotateY: claimed ? 180 : 0, rotateX: 0, opacity: 1 }}
+        initial={false}
+        animate={{ rotateY: claimed ? 180 : 0 }}
         whileTap={{ scale: 0.93 }}
-        {...deal}
+        transition={BONUS_SPRING}
         style={{ transformStyle: 'preserve-3d' }}
       >
         <div className="face front bonus-face red-face">
