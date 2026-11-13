@@ -89,3 +89,11 @@ export function playGameEnd() {
   ;[523.25, 659.25, 783.99, 1046.5].forEach((f) => tone(ac, f, end, 1.2, 'triangle', 0.12))
   tone(ac, 261.63, end, 1.2, 'sine', 0.15)
 }
+
+/** Picker selection: a quick soft "tock". */
+export function playSelect() {
+  const ac = audio()
+  if (!ac) return
+  const t = ac.currentTime
+  tone(ac, 1200, t, 0.05, 'triangle', 0.12, 700)
+}

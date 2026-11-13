@@ -210,15 +210,27 @@ main {
 }
 
 .segmented button {
+  position: relative;
   padding: 8px 14px;
   border-radius: 999px;
   color: var(--muted);
-  transition: background 0.2s, color 0.2s;
+  transition: color 0.25s;
 }
 
 .segmented button.on {
-  background: var(--ink);
   color: var(--jungle-2);
+}
+
+/* the selected pill slides between options (shared layoutId) */
+.seg-pill {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--ink);
+}
+
+.seg-text {
+  position: relative;
 }
 
 .start-btn {

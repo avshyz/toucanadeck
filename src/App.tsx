@@ -20,7 +20,7 @@ import {
   type Rounds,
   type Terrain,
 } from './game'
-import { playDraw, playFlip, playGameEnd, playRoundEnd, playUndo } from './sound'
+import { playDraw, playSelect, playFlip, playGameEnd, playRoundEnd, playUndo } from './sound'
 import { TerrainArt } from './TerrainArt'
 import { useWakeLock } from './useWakeLock'
 
@@ -94,9 +94,18 @@ function Segmented<T extends string | number>({
   return (
     <div className="segmented" role="radiogroup" aria-label={label}>
       {options.map((o) => (
-        <button key={o.value} role="radio" aria-checked={value === o.value} className={value === o.value ? 'on' : ''} onClick={() => onChange(o.value)}>
-          {o.text}
-          {o.sub && <small> {o.sub}</small>}
+        <button key={o.value} role="radio" aria-checked={value === o.value} className={value === o.value ? 'on' : ''} onClick={() => {
+            if (o.value === value) return
+            playSelect()
+            onChange(o.value)
+          }}>
+          {value === o.value && (
+            <motion.span className="seg-pill" layoutId={`seg-${label}`} transition={{ type: 'spring', stiffness: 420, damping: 34 }} />
+          )}
+          <span className="seg-text">
+            {o.text}
+            {o.sub && <small> {o.sub}</small>}
+          </span>
         </button>
       ))}
     </div>
