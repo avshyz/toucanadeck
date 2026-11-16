@@ -100,7 +100,7 @@ function Segmented<T extends string | number>({
             onChange(o.value)
           }}>
           {value === o.value && (
-            <motion.span className="seg-pill" layoutId={`seg-${label}`} transition={{ type: 'spring', stiffness: 420, damping: 34 }} />
+            <motion.span className="seg-pill" style={{ borderRadius: 999 }} layoutId={`seg-${label}`} transition={{ type: 'spring', stiffness: 420, damping: 34 }} />
           )}
           <span className="seg-text">
             {o.text}
@@ -119,6 +119,8 @@ const SWAP = {
   exit: { opacity: 0, scale: 0.97, transition: { duration: 0.15, ease: 'easeIn' as const } },
 }
 
+let splashSeen = false
+
 function Splash({
   saved,
   onStart,
@@ -132,6 +134,12 @@ function Splash({
   const [rounds, setRounds] = useState<Rounds>((saved?.decks.length as Rounds) ?? 2)
   const canContinue = !!saved && saved.step < totalTurns(saved)
   const [setupOpen, setSetupOpen] = useState(!canContinue)
+  // The slow staged intro plays only on the first visit; coming back from a game
+  // (new game, game over) the whole screen just pops in.
+  const [intro] = useState(() => !splashSeen)
+  useEffect(() => {
+    splashSeen = true
+  }, [])
   // The controls box animates its height to the swapped-in content, so the
   // centred title and cards above glide instead of jumping.
   const controlsRef = useRef<HTMLDivElement>(null)
@@ -156,16 +164,17 @@ function Splash({
   return (
     <motion.main
       className="splash"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 1.08, transition: { duration: 0.35 } }}
+      initial={intro ? { opacity: 0 } : { opacity: 0, scale: 0.92 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={intro ? undefined : { type: 'spring', stiffness: 320, damping: 28 }}
+      exit={{ opacity: 0, scale: 0.92, transition: { duration: 0.3, ease: 'easeIn' } }}
     >
       <div className="splash-cards" aria-hidden>
         {SPLASH_FAN.map(([t, r], i) => (
           <motion.div
             key={t}
             className="card splash-card"
-            initial={{ y: 300, rotate: 0, opacity: 0 }}
+            initial={intro ? { y: 300, rotate: 0, opacity: 0 } : false}
             animate={{ y: 0, rotate: r, x: r * 1.6, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 90, damping: 14, delay: SPLASH_DELAY + 0.15 + i * 0.1 }}
           >
@@ -178,7 +187,7 @@ function Splash({
 
       <motion.h1
         className="title"
-        initial={{ y: 40, opacity: 0, scale: 0.8 }}
+        initial={intro ? { y: 40, opacity: 0, scale: 0.8 } : false}
         animate={{ y: 0, opacity: 1, scale: 1 }}
         transition={{ type: 'spring', stiffness: 120, damping: 12, delay: SPLASH_DELAY + 0.6 }}
       >
@@ -187,7 +196,7 @@ function Splash({
 
       <motion.div
         className="splash-swap"
-        initial={{ opacity: 0, y: 20 }}
+        initial={intro ? { opacity: 0, y: 20 } : false}
         animate={{ opacity: 1, y: 0, height: controlsH ?? 'auto' }}
         transition={{ delay: SPLASH_DELAY + 0.9, height: SPLASH_SWAP }}
       >
