@@ -1,4 +1,5 @@
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, MotionConfig } from 'framer-motion'
+import { EASE_OUT, fadeIn, SPRING_UI } from './motion'
 import { ArrowRight, Flag, Hourglass, MapPin, RotateCcw, Undo2, X } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { BonusCard, CardBack, RedBonusCard, SetupCard, TerrainCard, type Dir } from './Cards'
@@ -40,30 +41,33 @@ export default function App() {
   }
 
   return (
-    <AnimatePresence mode="wait">
-      {playing && game ? (
-        <Table
-          key="table"
-          game={game}
-          setGame={setGame}
-          showSetupFirst={fresh}
-          onNewGame={() => {
-            setGame(null)
-            setPlaying(false)
-          }}
-        />
-      ) : (
-        <Splash
-          key="splash"
-          saved={game}
-          onStart={start}
-          onContinue={() => {
-            setFresh(false)
-            setPlaying(true)
-          }}
-        />
-      )}
-    </AnimatePresence>
+    // reducedMotion="user": with the OS setting on, transforms are skipped and only fades remain.
+    <MotionConfig reducedMotion="user">
+      <AnimatePresence mode="wait">
+        {playing && game ? (
+          <Table
+            key="table"
+            game={game}
+            setGame={setGame}
+            showSetupFirst={fresh}
+            onNewGame={() => {
+              setGame(null)
+              setPlaying(false)
+            }}
+          />
+        ) : (
+          <Splash
+            key="splash"
+            saved={game}
+            onStart={start}
+            onContinue={() => {
+              setFresh(false)
+              setPlaying(true)
+            }}
+          />
+        )}
+      </AnimatePresence>
+    </MotionConfig>
   )
 }
 
@@ -100,7 +104,7 @@ function Segmented<T extends string | number>({
             onChange(o.value)
           }}>
           {value === o.value && (
-            <motion.span className="seg-pill" style={{ borderRadius: 999 }} layoutId={`seg-${label}`} transition={{ type: 'spring', stiffness: 420, damping: 34 }} />
+            <motion.span className="seg-pill" style={{ borderRadius: 999 }} layoutId={`seg-${label}`} transition={{ ...SPRING_UI, duration: 0.25, bounce: 0.1 }} />
           )}
           <span className="seg-text">
             {o.text}
@@ -112,11 +116,11 @@ function Segmented<T extends string | number>({
   )
 }
 
-const SPLASH_SWAP = { type: 'spring' as const, stiffness: 220, damping: 30 }
+const SPLASH_SWAP = SPRING_UI
 const SWAP = {
   initial: { opacity: 0, y: 10, scale: 0.97 },
-  animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.28, delay: 0.08, ease: 'easeOut' as const } },
-  exit: { opacity: 0, scale: 0.97, transition: { duration: 0.15, ease: 'easeIn' as const } },
+  animate: { opacity: 1, y: 0, scale: 1, transition: fadeIn(0.22, 0.05) },
+  exit: { opacity: 0, scale: 0.98, transition: fadeIn(0.12) },
 }
 
 let splashSeen = false
@@ -164,10 +168,10 @@ function Splash({
   return (
     <motion.main
       className="splash"
-      initial={intro ? { opacity: 0 } : { opacity: 0, scale: 0.92 }}
+      initial={intro ? { opacity: 0 } : { opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={intro ? undefined : { type: 'spring', stiffness: 320, damping: 28 }}
-      exit={{ opacity: 0, scale: 0.92, transition: { duration: 0.3, ease: 'easeIn' } }}
+      transition={intro ? fadeIn(0.3) : fadeIn(0.25)}
+      exit={{ opacity: 0, scale: 0.95, transition: fadeIn(0.2) }}
     >
       <div className="splash-cards" aria-hidden>
         {SPLASH_FAN.map(([t, r], i) => (
@@ -176,7 +180,7 @@ function Splash({
             className="card splash-card"
             initial={intro ? { y: 300, rotate: 0, opacity: 0 } : false}
             animate={{ y: 0, rotate: r, x: r * 1.6, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 90, damping: 14, delay: SPLASH_DELAY + 0.15 + i * 0.1 }}
+            transition={{ type: 'spring', duration: 0.8, bounce: 0.25, delay: SPLASH_DELAY + i * 0.08 }}
           >
             <div className="face front terrain-face">
               <TerrainArt terrain={t} name="" />
@@ -187,18 +191,18 @@ function Splash({
 
       <motion.h1
         className="title"
-        initial={intro ? { y: 40, opacity: 0, scale: 0.8 } : false}
+        initial={intro ? { y: 24, opacity: 0, scale: 0.9 } : false}
         animate={{ y: 0, opacity: 1, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 120, damping: 12, delay: SPLASH_DELAY + 0.6 }}
+        transition={{ type: 'spring', duration: 0.6, bounce: 0.3, delay: SPLASH_DELAY + 0.45 }}
       >
         Toucana
       </motion.h1>
 
       <motion.div
         className="splash-swap"
-        initial={intro ? { opacity: 0, y: 20 } : false}
+        initial={intro ? { opacity: 0, y: 12 } : false}
         animate={{ opacity: 1, y: 0, height: controlsH ?? 'auto' }}
-        transition={{ delay: SPLASH_DELAY + 0.9, height: SPLASH_SWAP }}
+        transition={{ ...fadeIn(0.4, SPLASH_DELAY + 0.7), height: SPLASH_SWAP }}
       >
         <div ref={controlsRef}>
           <AnimatePresence mode="wait" initial={false}>
@@ -223,7 +227,7 @@ function Splash({
                     { value: 3 as Rounds, text: '3', sub: 'rounds' },
                   ]}
                 />
-                <motion.button className="start-btn" whileTap={{ scale: 0.94 }} onClick={() => onStart(mode, rounds)}>
+                <motion.button className="start-btn" whileTap={{ scale: 0.96 }} onClick={() => onStart(mode, rounds)}>
                   {ring}
                   Start
                 </motion.button>
@@ -235,7 +239,7 @@ function Splash({
               </motion.div>
             ) : (
               <motion.div key="continue" className="splash-controls" {...SWAP}>
-                <motion.button className="start-btn continue-btn" whileTap={{ scale: 0.94 }} onClick={onContinue}>
+                <motion.button className="start-btn continue-btn" whileTap={{ scale: 0.96 }} onClick={onContinue}>
                   {ring}
                   Continue
                   <span className="resume-info">
@@ -282,7 +286,7 @@ function Table({
   const veil = (hidden: boolean) => ({
     initial: { opacity: 0, scale: 0.9 },
     animate: hidden ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 },
-    transition: { duration: 0.45, ease: 'easeInOut' as const },
+    transition: fadeIn(0.28),
     style: { pointerEvents: hidden ? ('none' as const) : undefined },
   })
   const hud = veil(over || showVillages)
@@ -327,7 +331,7 @@ function Table({
   }
 
   return (
-    <motion.main className="table" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+    <motion.main className="table" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: fadeIn(0.2) }} exit={{ opacity: 0, transition: fadeIn(0.15) }}>
       <motion.header className="topbar" {...hud}>
         <div className="status">
           <span className="round">
@@ -345,7 +349,7 @@ function Table({
         </div>
         <motion.button
           className="card mini setup-mini"
-          whileTap={{ scale: 0.9 }}
+          whileTap={{ scale: 0.92 }}
           onClick={() => {
             setDir(1)
             setShowVillages(true)
@@ -367,7 +371,7 @@ function Table({
           </AnimatePresence>
           <AnimatePresence>
             {over && (
-              <motion.div className="game-over" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ opacity: 0 }}>
+              <motion.div className="game-over" initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1, transition: { type: 'spring', duration: 0.5, bounce: 0.2, delay: 0.15 } }} exit={{ opacity: 0, transition: fadeIn(0.15) }}>
                 <h2>Game over</h2>
                 <p>Score sights, villages & bonuses.</p>
                 <button className="start-btn small" onClick={onNewGame}>
@@ -383,10 +387,11 @@ function Table({
             <motion.div
               key={round}
               className="last-turn"
-              initial={{ y: -12, opacity: 0, scale: 0.9 }}
+              initial={{ y: -8, opacity: 0 }}
               animate={{ y: 0, opacity: 1, scale: [1, 1.04, 1] }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ scale: { repeat: Infinity, duration: 1.4, ease: 'easeInOut' } }}
+              exit={{ opacity: 0, scale: 0.96, transition: fadeIn(0.15) }}
+              // a few pulses to catch the eye, then it settles instead of nagging all turn
+              transition={{ ...fadeIn(0.25), scale: { repeat: 2, duration: 1.2, ease: 'easeInOut', delay: 0.3 } }}
             >
               <Hourglass size={18} strokeWidth={2.5} />
               Last card left — {finalRound ? 'game' : 'round'} end in sight
@@ -408,10 +413,10 @@ function Table({
       </motion.section>
 
       <motion.div className="fabs" {...veil(showVillages)}>
-        <motion.button className="fab undo" whileTap={{ scale: 0.88 }} onClick={() => go(-1)} disabled={game.step === 0} aria-label="Undo">
+        <motion.button className="fab undo" whileTap={{ scale: 0.92 }} onClick={() => go(-1)} disabled={game.step === 0} aria-label="Undo">
           <Undo2 size={24} />
         </motion.button>
-        <motion.button className="fab next" whileTap={{ scale: 0.9 }} onClick={() => go(1)} disabled={over} aria-label="Next" {...hud}>
+        <motion.button className="fab next" whileTap={{ scale: 0.92 }} onClick={() => go(1)} disabled={over} aria-label="Next" {...hud}>
           <ArrowRight size={30} strokeWidth={2.5} />
         </motion.button>
       </motion.div>
@@ -457,8 +462,8 @@ function Table({
             key="villages"
             className="setup-screen"
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 0.94, transition: { duration: 0.3, ease: 'easeIn' } }}
+            animate={{ opacity: 1, transition: fadeIn(0.25) }}
+            exit={{ opacity: 0, scale: 0.96, transition: fadeIn(0.2) }}
           >
             <h2>Set-up card</h2>
             <p>Read clockwise from the top. Mayor starts at village 1, the next player at village 2…</p>
@@ -471,7 +476,7 @@ function Table({
                   Draw another
                 </button>
               )}
-              <motion.button className="start-btn" whileTap={{ scale: 0.94 }} onClick={() => setShowVillages(false)}>
+              <motion.button className="start-btn" whileTap={{ scale: 0.96 }} onClick={() => setShowVillages(false)}>
                 {game.step === 0 ? "Let's play" : 'Back to game'}
               </motion.button>
             </div>
@@ -484,12 +489,18 @@ function Table({
 
 function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <motion.div className="backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
+    <motion.div
+      className="backdrop"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1, transition: fadeIn(0.2) }}
+      exit={{ opacity: 0, transition: fadeIn(0.15) }}
+      onClick={onClose}
+    >
       <motion.div
         className="modal"
-        initial={{ y: 40, scale: 0.95 }}
-        animate={{ y: 0, scale: 1 }}
-        exit={{ y: 40, scale: 0.95 }}
+        initial={{ y: 16, scale: 0.96 }}
+        animate={{ y: 0, scale: 1, transition: { duration: 0.25, ease: EASE_OUT } }}
+        exit={{ y: 8, scale: 0.98, transition: fadeIn(0.15) }}
         onClick={(e) => e.stopPropagation()}
       >
         <button className="icon-btn close" onClick={onClose} aria-label="Close">

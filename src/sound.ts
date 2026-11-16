@@ -49,9 +49,9 @@ export function playDraw() {
   if (!ac) return
   const t = ac.currentTime
   swish(ac, t + 0.1)
-  swish(ac, t + 0.26)
-  tone(ac, 880, t + 0.42, 0.12, 'triangle')
-  tone(ac, 1320, t + 0.5, 0.18, 'triangle')
+  swish(ac, t + 0.24)
+  tone(ac, 880, t + 0.4, 0.12, 'triangle')
+  tone(ac, 1320, t + 0.48, 0.18, 'triangle')
 }
 
 /** Undo: a descending "whoop". */

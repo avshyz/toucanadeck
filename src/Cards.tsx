@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { EASE_IN, EASE_OUT, SPRING_CARD } from './motion'
 import { Check, Mountain, Sparkles, Sun, Trees, Waves } from 'lucide-react'
 import { SIGHT_ICON, SIGHT_NAME } from './SightIcons'
 import { TerrainArt } from './TerrainArt'
@@ -33,7 +34,8 @@ function TerrainFace({ terrain }: { terrain: Terrain }) {
 
 export type Dir = 1 | -1
 
-const BONUS_SPRING = { type: 'spring' as const, stiffness: 220, damping: 18 }
+const BONUS_SPRING = { type: 'spring' as const, duration: 0.4, bounce: 0.2 }
+const TAP = { scale: 0.95 }
 
 /**
  * On load every bonus card shows its fresh side; saved claims are then replayed as flips,
@@ -49,7 +51,7 @@ function useReplayed(value: number, order: number) {
       setLive(true)
       return
     }
-    const t = setTimeout(() => setShown((s) => s + 1), shown === 0 ? 450 + order * 110 : 180)
+    const t = setTimeout(() => setShown((s) => s + 1), shown === 0 ? 400 + order * 90 : 160)
     return () => clearTimeout(t)
   }, [live, shown, value, order])
   return live ? value : shown
@@ -72,9 +74,11 @@ const SHADOW_URL = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
 
 export function TerrainCard({ terrain, index, dir }: { terrain: Terrain; index: number; dir: Dir }) {
   // `custom` (dir, or 0 on game over) is supplied by AnimatePresence so exiting cards use the latest value.
-  const spring = { type: 'spring' as const, stiffness: 160, damping: 19, delay: 0.12 + index * 0.16 }
-  const leave = { duration: 0.32, ease: 'easeIn' as const, delay: index * 0.05 }
-  const fade = { duration: 0.45, ease: 'easeInOut' as const }
+  // Next/Undo comes once every minute or two, so the deal is a small moment worth
+  // savouring: the old pair is swept away, the new one is tossed in one card after the other.
+  const spring = { ...SPRING_CARD, delay: 0.1 + index * 0.14 }
+  const leave = { duration: 0.3, ease: EASE_IN, delay: index * 0.05 }
+  const fade = { duration: 0.3, ease: EASE_OUT }
 
   // Outer layer: position / tilt / fade (2D only) — carries the shadow.
   const move = {
@@ -157,7 +161,7 @@ export function BonusCard({
         className={`card bonus-card ${done ? 'done' : ''}`}
         initial={false}
         animate={{ rotateY: claimed * 180 }}
-        whileTap={{ scale: 0.93 }}
+        whileTap={TAP}
         transition={BONUS_SPRING}
         style={{ transformStyle: 'preserve-3d' }}
       >
@@ -175,8 +179,9 @@ export function SetupCard({ letters }: { letters: Letter[] }) {
       className="card setup-card"
       initial={{ rotateY: 180 }}
       animate={{ rotateY: 0 }}
-      exit={{ rotateY: -180, transition: { duration: 0.3, ease: 'easeIn' } }}
-      transition={{ type: 'spring', stiffness: 140, damping: 16, delay: 0.15 }}
+      // shown once per game, so it gets a slow, showy flip
+      exit={{ rotateY: -180, transition: { duration: 0.35, ease: EASE_IN } }}
+      transition={{ type: 'spring', duration: 0.9, bounce: 0.25, delay: 0.15 }}
       style={{ transformStyle: 'preserve-3d' }}
     >
       <div className="face front setup-face">
@@ -214,7 +219,7 @@ export function RedBonusCard({ index, claimed: savedClaimed, onTap, order }: { i
         className="card bonus-card red-card"
         initial={false}
         animate={{ rotateY: claimed ? 180 : 0 }}
-        whileTap={{ scale: 0.93 }}
+        whileTap={TAP}
         transition={BONUS_SPRING}
         style={{ transformStyle: 'preserve-3d' }}
       >
